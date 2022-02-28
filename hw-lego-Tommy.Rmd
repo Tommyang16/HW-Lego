@@ -9,12 +9,47 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
+#remotes::install_github("rstudio-education/dsbox")
 library(tidyverse)
-
+library(dsbox)
 ```
+
+<font size="5" color = "blue"> Question 1.</font> 
+<font size = "5">What are the three most common first names of purchasers?</font>
 ```{r}
-remotes::install_github("rstudio-education/dsbox")
+mostcom_fname<- lego_sales %>%
+                 count(first_name, sort = TRUE) %>%
+                 top_n(3)
+mostcom_fname
+
 ```
+#### In this sample, the first three common first names of purchasers are: `r mostcom_fname[1,1]`,`r mostcom_fname[2,1]`, `r mostcom_fname[3,1]`.
 
+<font size="5" color = "blue"> Question 2.</font> 
+<font size = "5">What are the three most common themes of Lego sets purchased?</font>
 
+```{r}
+mostcom_theme<- lego_sales %>%
+                 count(theme, sort = TRUE) %>%
+                 top_n(3)
+mostcom_theme
+
+```
+#### In this sample, the first three common themes of Lego sets purchased are: `r mostcom_theme[1,1]`,`r mostcom_theme[2,1]`, `r mostcom_theme[3,1]` or `r mostcom_theme[4,1]`.
+
+<font size="5" color = "blue"> Question 3.</font> 
+<font size = "5">Among the most common theme of Lego sets purchased, what is the most common subtheme?</font>
+
+```{r}
+mostcom_theme <- lego_sales %>%
+                 count(theme, sort = TRUE) %>%
+                 top_n(1)
+mostcom_subtheme <- lego_sales %>%
+                    filter(theme == as.character(mostcom_theme[1,1]))%>%
+                    count(subtheme,sort = TRUE)%>%
+                    top_n(1)
+                    
+mostcom_subtheme
+```
+#### In this sample, among the most common themes of Lego sets purchased, the most common subtheme is: `r mostcom_subtheme[1,1]`.
