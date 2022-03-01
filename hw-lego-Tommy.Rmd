@@ -17,39 +17,154 @@ library(dsbox)
 
 <font size="5" color = "blue"> Question 1.</font> 
 <font size = "5">What are the three most common first names of purchasers?</font>
-```{r}
+```{r message=FALSE, warning=FALSE}
 mostcom_fname<- lego_sales %>%
                  count(first_name, sort = TRUE) %>%
                  top_n(3)
 mostcom_fname
-
 ```
 #### In this sample, the first three common first names of purchasers are: `r mostcom_fname[1,1]`,`r mostcom_fname[2,1]`, `r mostcom_fname[3,1]`.
+
+
 
 <font size="5" color = "blue"> Question 2.</font> 
 <font size = "5">What are the three most common themes of Lego sets purchased?</font>
 
-```{r}
-mostcom_theme<- lego_sales %>%
-                 count(theme, sort = TRUE) %>%
-                 top_n(3)
+```{r message=FALSE, warning=FALSE}
+lego_sales %>%count(theme, sort = TRUE) %>%
+                 top_n(3) # the top three purchased times of themes of Lego sets.
+
+mostcom_theme<-lego_sales%>%
+               group_by(theme)%>%
+               summarise(tsales=sum(quantity))%>%
+               arrange(desc(tsales))%>%
+               top_n(3)
 mostcom_theme
 
+
 ```
-#### In this sample, the first three common themes of Lego sets purchased are: `r mostcom_theme[1,1]`,`r mostcom_theme[2,1]`, `r mostcom_theme[3,1]` or `r mostcom_theme[4,1]`.
+#### In this sample, the first three common themes of Lego sets purchased are: `r mostcom_theme[1,1]`,`r mostcom_theme[2,1]`, `r mostcom_theme[3,1]`.
+
+
 
 <font size="5" color = "blue"> Question 3.</font> 
 <font size = "5">Among the most common theme of Lego sets purchased, what is the most common subtheme?</font>
 
 ```{r}
-mostcom_theme <- lego_sales %>%
-                 count(theme, sort = TRUE) %>%
-                 top_n(1)
+
 mostcom_subtheme <- lego_sales %>%
                     filter(theme == as.character(mostcom_theme[1,1]))%>%
-                    count(subtheme,sort = TRUE)%>%
-                    top_n(1)
+                    group_by(subtheme)%>%
+                    summarise(ssales=sum(quantity))%>%
+                    arrange(desc(ssales))#%>%
+                    #top_n(3)
                     
 mostcom_subtheme
+lego_sales%>% filter(subtheme %in% mostcom_subtheme$subtheme)
 ```
 #### In this sample, among the most common themes of Lego sets purchased, the most common subtheme is: `r mostcom_subtheme[1,1]`.
+
+
+<font size="5" color = "blue"> Question 4.</font> 
+<font size = "5">Create a new variable called age_group and group the ages into the following categories: “18 and under”, “19 - 25”, “26 - 35”, “36 - 50”, “51 and over”.</font>
+
+```{r}
+
+ lego_sales$age_group <-  as.factor(ifelse(lego_sales$age <= 18, "18 and under",
+                                    ifelse(lego_sales$age <= 25, "19-25",
+                                    ifelse(lego_sales$age <= 35, "26-35",
+                                    ifelse(lego_sales$age <= 50, "36-50",
+                                    ifelse(lego_sales$age <= max(lego_sales$age),  "51 and over"))))))
+
+lego_sales
+  
+```
+
+<font size="5" color = "blue"> Question 5.</font> 
+<font size = "5">Which age group has purchased the highest number of Lego sets?</font>
+
+```{r}
+group_purchase<-lego_sales %>% 
+                group_by(age_group)%>%
+                summarise(group_sum=sum(quantity))%>%
+                arrange(desc(group_sum))
+group_purchase
+
+
+```
+
+#### In this sample, "`r group_purchase[1,1]`" years old group has purchased the highest number of Lego sets.
+
+
+
+<font size="5" color = "blue"> Question 6.</font> 
+<font size = "5">Which age group has spent the most money on Legos?</font>
+
+```{r}
+group_spend<-lego_sales %>% 
+                group_by(age_group)%>%
+                summarise(group_sum=sum(quantity*us_price))%>%
+                arrange(desc(group_sum))
+group_spend
+
+```
+
+#### In this sample, "`r group_spend[1,1]`" years old group has purchased the highest number of Lego sets.
+
+
+
+<font size="5" color = "blue"> Question 7.</font> 
+<font size = "5">Which Lego theme has made the most money for Lego?</font>
+
+```{r}
+theme_sales<-lego_sales %>% 
+                group_by(theme)%>%
+                summarise(sales=sum(quantity*us_price))%>%
+                arrange(desc(sales))
+theme_sales
+
+```
+#### In this sample,the theme of `r theme_sales[1,1]`has made the most money for Lego.
+
+
+
+<font size="5" color = "blue"> Question 8.</font> 
+<font size = "5">Which area code has spent the most money on Legos? In the US the area code is the first 3 digits of a phone number.</font>
+
+```{r}
+area_spend<-lego_sales%>% 
+              filter(!is.na(phone_number))%>%
+              mutate(area_code = str_sub(phone_number,1,3))%>%
+              group_by(area_code)%>%
+              summarise(areasum=sum(quantity*us_price))%>%
+              arrange(desc(areasum))
+area_spend
+```
+#### In this sample, the customers in area code `r area_spend[1,1]` have spent the most money on Legos.
+
+<font size="5" color = "blue"> Question 9.</font> 
+<font size = "5">Which price of Legos has the customer liked to purchase? Which pieces of Legos has the customer liked to purchase? What is the relationship between the pieces and price of the legos? </font>
+
+```{r message=FALSE, warning=FALSE}
+lego_sales%>%count(us_price,sort = TRUE)
+lego_sales%>% ggplot(mapping = aes(x = us_price))+
+    geom_freqpoly()+
+    geom_histogram(binwidth = 5)+
+    scale_x_continuous(breaks = seq(0, 400, by = 20))
+   
+lego_sales%>%count(pieces,sort = TRUE)
+lego_sales%>% ggplot(mapping = aes(x = pieces))+
+    geom_freqpoly()+
+    geom_histogram(binwidth = 50)
+    #(breaks = seq(0, 400, by = 20))
+lego_sales%>%filter(pieces<1000) %>%ggplot(mapping = aes(x = pieces))+
+    geom_freqpoly()+
+    geom_histogram(binwidth = 50)+
+    scale_x_continuous(breaks = seq(0, 1000, by = 50))
+
+ggplot(data = lego_sales, mapping = aes(x = pieces, y = us_price)) + 
+  geom_point()+
+  geom_smooth()
+```
+
+### In this sample, roughly most of the custormers liked to purchase the legos with the price under $50 and the pieces under 400. The price of the lego has a approximate linear positive relationship with the pieces at a ratio of about 0.1.
